@@ -14,6 +14,8 @@ class StaircaseEnv(gym.Env):
         self.num_stairs = 25
         self.step_penalty = -1
         self.goal_reward = 100
+        self.trap_stairs = {6, 13, 20}
+        self.trap_forward_probability = 0.7
 
         # State = current stair number
         # Positions are 0 through num_stairs, inclusive.
@@ -51,6 +53,24 @@ class StaircaseEnv(gym.Env):
             self.position += 2
 
         self.position = min(self.position, self.num_stairs)
+        info = {"trap_triggered": False, "trap_outcomes": []}
+
+        # logic to trigger trap if stepped on
+        while self.position in self.trap_stairs and self.position < self.num_stairs:
+            trap_stair = self.position
+            info["trap_triggered"] = True
+
+            # randomness on whether agent gets thrown forward or backward
+            if self.np_random.random() < self.trap_forward_probability:
+                self.position += 3
+                outcome = "forward"
+            else:
+                self.position -= 4
+                outcome = "backward"
+
+            # makes sure agent isnt thrown off staircase: stops at top or bottom.
+            self.position = min(max(self.position, 0), self.num_stairs)
+            info["trap_outcomes"].append((trap_stair, outcome))
 
         observation = self.position
         # penalty for each step taken
@@ -68,7 +88,6 @@ class StaircaseEnv(gym.Env):
 
         # Gymnasium's TimeLimit wrapper sets this to True at the step limit.
         truncated = False
-        info = {}
 
         return observation, reward, terminated, truncated, info
 
@@ -79,7 +98,13 @@ class StaircaseEnv(gym.Env):
 
         lines = ["Staircase (A = agent):"]
         for stair in range(self.num_stairs, -1, -1):
-            marker = "A" if self.position == stair else " "
+            # mark agent's position and trap stairs
+            if self.position == stair:
+                marker = "A"
+            elif stair in self.trap_stairs:
+                marker = "T"
+            else:
+                marker = " "
             lines.append(f"{'  ' * stair}{marker}[{stair}]")
 
         return "\n".join(lines)
