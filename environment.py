@@ -12,7 +12,6 @@ class StaircaseEnv(gym.Env):
         super().__init__()
 
         self.num_stairs = 25
-        self.max_episode_steps = 50
         self.step_penalty = -1
         self.goal_reward = 100
 
@@ -26,14 +25,12 @@ class StaircaseEnv(gym.Env):
         self.render_mode = render_mode
 
         self.position = 0
-        self.elapsed_steps = 0
 
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
 
         self.position = 0
-        self.elapsed_steps = 0
 
         observation = self.position
         info = {}
@@ -48,8 +45,6 @@ class StaircaseEnv(gym.Env):
         # 3. Later: apply trap behavior
         # 4. Calculate reward
         # 5. Check termination
-        self.elapsed_steps += 1
-
         if action == 0:
             self.position += 1
         elif action == 1:
@@ -64,11 +59,6 @@ class StaircaseEnv(gym.Env):
         # Check if the agent has reached the goal
         reached_goal = self.position == self.num_stairs
 
-        # Check if the episode has timed out by seeing if max steps has been reached without reaching goal
-        timed_out = (
-            self.elapsed_steps >= self.max_episode_steps and not reached_goal
-        )
-
         # Reaching the goal is termination
         terminated = reached_goal
 
@@ -76,8 +66,8 @@ class StaircaseEnv(gym.Env):
         if reached_goal:
             reward += self.goal_reward
 
-        # If the episode has timed out, set truncated to True
-        truncated = timed_out
+        # Gymnasium's TimeLimit wrapper sets this to True at the step limit.
+        truncated = False
         info = {}
 
         return observation, reward, terminated, truncated, info
@@ -102,4 +92,5 @@ class StaircaseEnv(gym.Env):
 register(
     id="cs272/Staircase-v0",
     entry_point="environment:StaircaseEnv",
+    max_episode_steps=50,
 )
