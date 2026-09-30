@@ -184,7 +184,6 @@ class SarsaLambdaAgent:
 
             episode.append((state, action, float(reward)))
 
-
             if terminated or truncated:
                 return episode, bool(terminated)
 
@@ -194,7 +193,24 @@ class SarsaLambdaAgent:
 
     def calc_return(self, episode: list[tuple[Any, Any, float]], discounted: bool = False) -> float:
         """Return of an episode given as [(s, a, r), ...]."""
-        raise NotImplementedError
+        if not discounted:
+            total_reward = 0.0
+            for _, _, reward in episode:
+                total_reward += reward
+            return total_reward
+
+        #G_t = R_{t+1} + gamma * G_{t+1}, computed backwards through the episode.
+        returns = []
+        g = 0.0
+        rewards = []
+        for _, _, reward in episode:
+            rewards.append(reward)
+        for r in reversed(rewards):
+            g = r + self.gamma * g
+            returns.append(g)
+        returns.reverse()
+            
+        return returns
 
 
 class RandomAgent(SarsaLambdaAgent):
