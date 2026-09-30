@@ -106,7 +106,7 @@ class SarsaLambdaAgent:
 
         #act greedily if False, with uniform random tie-breaking
         else:
-            action = argmax_action(self.q, self.rng)
+            action = argmax_action(self.q[state], self.rng)
         
         return action
 
@@ -123,7 +123,7 @@ class SarsaLambdaAgent:
             #eligibility traces are episodic, reset at beginning of each one
             eligibility = np.zeros_like(self.q)
             
-            state, info = self.env.reset
+            state, info = self.env.reset()
             action = self.eps_greedy(state, exploration = True)
             total_reward = 0.0
             
@@ -132,9 +132,8 @@ class SarsaLambdaAgent:
 
                 total_reward += reward
 
-                #terminal/truncated states have no next action/value.
-                done = terminated or truncated
-                if done:
+                # A true terminal state does not bootstrap, truncation does.
+                if terminated:
                     delta = reward - self.q[state, action]
                 else:
                     next_action = self.eps_greedy(next_state, exploration = True)
@@ -152,7 +151,7 @@ class SarsaLambdaAgent:
                 #decay eligibility traces
                 eligibility *= self.gamma * self.lam
 
-                if done:
+                if terminated or truncated:
                     break
 
                 state = next_state
@@ -171,7 +170,7 @@ class SarsaLambdaAgent:
         Returns:
             tuple[
                 list[tuple[int,int,float]]: the episode, as [(s, a, r), ...]
-                bool: True if it reached a terminal state, False if it ran out
+                bool: True if terminated; False if truncated or max_steps elapsed
             ]
         """
         state, info = self.env.reset()
@@ -185,9 +184,9 @@ class SarsaLambdaAgent:
 
             episode.append((state, action, float(reward)))
 
-            done = terminated or truncated
-            if done:
-                return episode, bool(done)
+
+            if terminated or truncated:
+                return episode, bool(terminated)
 
             state = next_state
 
