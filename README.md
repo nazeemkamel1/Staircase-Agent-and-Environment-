@@ -16,19 +16,23 @@ The action space is `Discrete(2)`: action 0 moves up one stair, and action 1 mov
 1: Moves up two stairs, skipping a step
 
 ## Observation Space
-The observation is one integer, being the player's current stair. `Discrete(26)` represents positions 0 through 25, inclusive. 
-
-Each step gives a reward of -1. Reaching stair 25 adds 100, so the final step to the goal gives 99. Reaching the goal ends the episode (`terminated=True`). If the player has not finished after 50 steps, Gymnasium's time-limit wrapper ends the episode as truncated. On landing on a trap, the player has a 70% chance of moving forward 3 stairs and a 30% chance of moving back 4. Trap effects can trigger another trap if they land on one. Random outcomes use Gymnasium's seeded `self.np_random` generator.
+The observation is one integer, being the player's current stair. `Discrete(26)` represents positions 0 through 25, inclusive. The number of possible observations is 26, the number of stairs in our staircase (25) and our starting location at the bottom. 
 
 ## Starting State
 The episode starts with the player in state [0] (location [0,0])
 
 ## Rewards
+Each step gives a reward of -1. Reaching stair 25 adds 100, so the final step to the goal gives 99.
+Reach goal: +100
+Each step: -1
 
 ## Episode End
+Reaching the goal ends the episode (`terminated=True`). If the player has not finished after 50 steps, Gymnasium's time-limit wrapper ends the episode as truncated. 
+Termination: The player reaches the top of the staircase.
+Truncation (using the time_limit wrapper): The length of the episode is 50
 
 ## Information
+On landing on a trap, the player has a 70% chance of moving forward 3 stairs and a 30% chance of moving back 4. Trap effects can trigger another trap if they land on one. Random outcomes use Gymnasium's seeded `self.np_random` generator.
 
 ## Arguments
-
 The constructor accepts `render_mode`; use `"ansi"` to get a text rendering, or leave it as `None`. The registered environment ID is `cs272/Staircase-v0`, created with `gym.make("cs272/Staircase-v0")`.
